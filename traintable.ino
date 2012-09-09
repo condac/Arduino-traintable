@@ -1,12 +1,14 @@
 
 
-// Modified by Burns, Juli 2012
-// Original 23. November 2009
-// works well with LMD18200 Booster 
-// And with Märklin Delta 6604 66045 /Burns
-/*Copyright (C) 2009 Michael Blank
+/*
+Arduino DCC automatic train controller
+by Burns, Juli 2012
 
+This program sends pulses 0v-5v on DCC_PIN that needs to be amplified by a booster
+works well with LMD18200 Booster 
+And with Märklin Delta 6604 66045
 
+Some parts of the program is originaly from Michael Blank and is released under GNU license
 
 This program is free software; you can redistribute it and/or modify it under the terms of the 
 GNU General Public License as published by the Free Software Foundation; 
