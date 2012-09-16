@@ -19,7 +19,7 @@ See the GNU General Public License for more details.
 
 //All pins
 /*
-0 Overload led
+0 serial
 1 serial
 2 Man/auto switch
 3 Start/Stop switch
@@ -37,10 +37,10 @@ See the GNU General Public License for more details.
 Analog
 0 Gas 1
 1 Gas 2
-2
+2 Current sense
 3
 4
-5
+5 Overload LED
 
 */
 #define OVER_LED   A5
@@ -49,8 +49,8 @@ Analog
 #define START_SW     3  // Start switch
 #define SENSOR1    8  // Pre station sensor1
 #define SENSOR2    9  // Pre station sensor1
-#define PARK1     8  // Park sensor 1
-#define PARK2     9  // Park sensor 2
+#define PARK1     6  // Park sensor 1
+#define PARK2     7  //Park sensor 2
 #define DCC_PIN    4  // Arduino pin for DCC out 
                       // this pin is connected to "DIRECTION" of LMD18200
 #define DCC_PWM    5  // must be HIGH for signal out
@@ -94,7 +94,7 @@ boolean firststart = true;
 int maxcurrent = 0;
 int current;
 int overcurrent = 36;
-
+boolean currentprotection = true;
 int hertz = 10;
 int wait = 1000/hertz;
 
@@ -136,8 +136,8 @@ int FPin2[] = { 3,3,3,3};
 int maxF2 = 3;
 int locoAdr2 = 1;   // this is the (fixed) address of the loco
 boolean stopping2 = false;
-int loco2maxspeed = 110;
-int loco2parkspeed = 70;
+int loco2maxspeed = 120;
+int loco2parkspeed = 100;
 boolean parked2 = false;
 int laptime2 = 30*hertz;
 
@@ -261,8 +261,8 @@ void setup(void) {
   pinMode(DCC_PIN,OUTPUT);   // this is for the DCC Signal
   pinMode(13,OUTPUT);
 
-  pinMode(DCC_PWM,OUTPUT);   // will be kept high, PWM pin
-  digitalWrite(DCC_PWM,HIGH);
+  pinMode(DCC_PWM,OUTPUT);   // will be kept high when power on rail is on, PWM pin
+  digitalWrite(DCC_PWM,LOW);
 
   pinMode(OVER_LED,OUTPUT);   // this is for the DCC Signal
   
@@ -290,7 +290,7 @@ void setup(void) {
   pinMode(PARK2, INPUT);
   digitalWrite(PARK2, 1);  //enable pull-up resistor
   
-  for (int i=0 ; i<=maxF; i++){
+  for (int i=0 ; i<=maxF; i++){ //not used
      pinMode(FPin[i], INPUT);
      digitalWrite(FPin[i], 1);  //enable pull-up resistor
   }  
@@ -306,7 +306,8 @@ void setup(void) {
 }
 
 void loop(void) {
-
+  if (currentprotection) {
+    
   //delay(200);
   for (int i=0; i<wait; i++) {
     current = analogRead(CURRENT_PIN);
@@ -316,6 +317,7 @@ void loop(void) {
     if (current >overcurrent) {
       digitalWrite(DCC_PWM,LOW);
       digitalWrite(OVER_LED,HIGH);
+      currentprotection = false;
     }
     delay(1);
   }
@@ -410,6 +412,7 @@ void loop(void) {
       Serial.print(" : " ); 
       Serial.println(locoSpeed2); 
     }
+  }
   }
 }
 
