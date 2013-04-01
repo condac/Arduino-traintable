@@ -45,14 +45,14 @@ Analog
 5 Overload LED
 
 */
-#define OVER_LED   A5
+#define OVER_LED   13
 
 #define MAN_SW     2  // MAN/AUTO Switch
 #define START_SW     3  // Start switch
 #define SENSOR1    8  // Pre station sensor1
 #define SENSOR2    9  // Pre station sensor1
-#define PARK1     6  // Park sensor 1
-#define PARK2     7  //Park sensor 2
+#define PARK1     11  // Park sensor 1
+#define PARK2     12  //Park sensor 2
 #define DCC_PIN    4  // Arduino pin for DCC out 
                       // this pin is connected to "DIRECTION" of LMD18200
 #define DCC_PWM    5  // must be HIGH for signal out
@@ -95,8 +95,9 @@ unsigned char cbit = 0x80;
 boolean firststart = true;
 int maxcurrent = 0;
 int current;
-int overcurrent = 36;
+int overcurrent = 36; //was 36
 boolean currentprotection = true;
+boolean trackOn = false;
 int hertz = 10;
 int wait = 1000/hertz;
 
@@ -258,13 +259,14 @@ ISR(TIMER2_OVF_vect) {
 }
 
 void setup(void) {
-    Serial.begin(9600); 
+  pinMode(DCC_PWM,OUTPUT);   // will be kept high when power on rail is on, PWM pin
+  digitalWrite(DCC_PWM,LOW);
+  Serial.begin(9600); 
   //Set the pins for DCC to "output".
   pinMode(DCC_PIN,OUTPUT);   // this is for the DCC Signal
   pinMode(13,OUTPUT);
 
-  pinMode(DCC_PWM,OUTPUT);   // will be kept high when power on rail is on, PWM pin
-  digitalWrite(DCC_PWM,LOW);
+
 
   pinMode(OVER_LED,OUTPUT);   // this is for the DCC Signal
   
@@ -305,11 +307,15 @@ void setup(void) {
   SetupTimer2();   
 
   digitalWrite(OVER_LED,LOW);
+        Serial.println("Setup completed");
+
 }
 
 void loop(void) {
   if (currentprotection) {
-    
+    if (trackOn) {
+      digitalWrite(DCC_PWM,HIGH);
+    }
   //delay(200);
   for (int i=0; i<wait; i++) {
     current = analogRead(CURRENT_PIN);
@@ -320,6 +326,8 @@ void loop(void) {
       digitalWrite(DCC_PWM,LOW);
       digitalWrite(OVER_LED,HIGH);
       currentprotection = false;
+      Serial.println("HIGH CURRENT");
+      
     }
     delay(1);
   }
@@ -379,7 +387,8 @@ void loop(void) {
   else {
     Serial.println("Start ON" ); 
     //else powerswitch is in ON state
-    digitalWrite(DCC_PWM,HIGH);
+    //digitalWrite(DCC_PWM,HIGH);
+    trackOn = true;
     parked1= false;
     parked2= false;
     if ( digitalRead(MAN_SW) ) {
@@ -397,6 +406,7 @@ void loop(void) {
       Serial.print(locoSpeed); 
       Serial.print(" : " ); 
       Serial.print(locoSpeed2); 
+      sensortest();
     }
     else {
       if (auto_loco2())  {
@@ -676,4 +686,26 @@ void assemble_dcc_msglight() {
    msg[3].data[3] = xdata;
    interrupts();
 
+}
+void sensortest() {
+   /* #define MAN_SW     2  // MAN/AUTO Switch
+#define START_SW     3  // Start switch
+#define SENSOR1    8  // Pre station sensor1
+#define SENSOR2    9  // Pre station sensor1
+#define PARK1     22  // Park sensor 1
+#define PARK2     7  //Park sensor 2
+*/
+    Serial.print("Sensortest:");
+    Serial.print("MAN_SW:");
+    Serial.print(digitalRead(MAN_SW));  
+    Serial.print(" START_SW:");
+    Serial.print(digitalRead(START_SW));
+        Serial.print(" SENSOR1:");
+    Serial.print(digitalRead(SENSOR1));
+        Serial.print(" SENSOR2:");
+    Serial.print(digitalRead(SENSOR2));
+        Serial.print(" PARK1:");
+    Serial.print(digitalRead(PARK1));
+        Serial.print(" PARK2:");
+    Serial.print(digitalRead(PARK2));
 }
