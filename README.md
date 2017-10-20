@@ -1,6 +1,8 @@
 Arduino-traintable
 ==================
 
+!! NOTE !! Check out my other project for a more usefull traincontroller https://github.com/condac/DCC-SAAC 
+
 Automatic DCC controler with Arduino for a small coffe table layout
 
 
